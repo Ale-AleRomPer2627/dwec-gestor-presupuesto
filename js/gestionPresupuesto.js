@@ -5,8 +5,8 @@ let presupuesto = 0;
 // Función para validar que el valor es un número positivo
 function validarValor(valor) {
     return typeof valor === "number" &&
-           Number.isFinite(valor) &&
-           valor >= 0;
+        Number.isFinite(valor) &&
+        valor >= 0;
 }
 
 // Función para actualizar el presupuesto
@@ -25,20 +25,35 @@ function mostrarPresupuesto() {
 }
 
 // Constructor para crear un gasto
-function CrearGasto(descripcion, valor) {
+function CrearGasto(descripcion, valor = 0, fecha, ...etiquetas) {
 
     this.descripcion = descripcion;
-    this.valor = validarValor(valor) ? valor : undefined;
+    this.valor = validarValor(valor) ? valor : 0;
 
+    // Inicializar la fecha
+    let fechaParseada = typeof fecha === "string"
+        ? Date.parse(fecha)
+        : NaN;
+
+    this.fecha = Number.isNaN(fechaParseada)
+        ? Date.now()
+        : fechaParseada;
+
+    // Inicializar el array de etiquetas
+    this.etiquetas = [];
+
+    // Mostrar información básica del gasto
     this.mostrarGasto = function () {
         return `Gasto correspondiente a ${this.descripcion} con valor ${this.valor} €`;
     };
 
+    // Actualizar descripción
     this.actualizarDescripcion = function (nuevaDescripcion) {
         this.descripcion = nuevaDescripcion;
         return this.descripcion;
     };
 
+    // Actualizar valor
     this.actualizarValor = function (nuevoValor) {
         if (validarValor(nuevoValor)) {
             this.valor = nuevoValor;
@@ -46,14 +61,58 @@ function CrearGasto(descripcion, valor) {
 
         return this.valor;
     };
+
+    // Actualizar fecha del gasto
+    this.actualizarFecha = function (nuevaFecha) {
+        let fechaParseada = Date.parse(nuevaFecha);
+
+        if (!Number.isNaN(fechaParseada)) {
+            this.fecha = fechaParseada;
+        }
+
+        return this.fecha;
+    };
+
+    // Añadir etiquetas sin permitir duplicados
+    this.anyadirEtiquetas = function (...etiquetas) {
+        etiquetas.forEach(etiqueta => {
+            if (!this.etiquetas.includes(etiqueta)) {
+                this.etiquetas.push(etiqueta);
+            }
+        });
+
+        return this.etiquetas;
+    };
+
+    // Borrar las etiquetas indicadas
+    this.borrarEtiquetas = function (...etiquetas) {
+        this.etiquetas = this.etiquetas.filter(
+            etiqueta => !etiquetas.includes(etiqueta)
+        );
+
+        return this.etiquetas;
+    };
+
+    // Mostrar información completa del gasto
+    this.mostrarGastoCompleto = function () {
+        let gastoCompleto = `Gasto correspondiente a ${this.descripcion} con valor ${this.valor} €.
+Fecha: ${new Date(this.fecha).toLocaleString()}
+Etiquetas:
+`;
+
+        this.etiquetas.forEach(etiqueta => {
+            gastoCompleto += ` - ${etiqueta}\n`;
+        });
+
+        return gastoCompleto;
+    };
+
+    // Añadir las etiquetas recibidas al crear el gasto
+    this.anyadirEtiquetas(...etiquetas);
 }
 
 // Función para listar todos los gastos
 function listarGastos() {
-    if (gastos.length === 0) {
-        return "No hay gastos registrados.";
-    }
-
     return gastos;
 }
 
@@ -88,6 +147,18 @@ function calcularTotalGastos() {
 // Función para calcular el balance actual
 function calcularBalance() {
     return presupuesto - calcularTotalGastos();
+}
+
+// NO MODIFICAR A PARTIR DE AQUÍ: exportación de funciones y objetos creados para poder ejecutar los tests.
+export {
+    mostrarPresupuesto,
+    actualizarPresupuesto,
+    CrearGasto,
+    listarGastos,
+    anyadirGasto,
+    borrarGasto,
+    calcularTotalGastos,
+    calcularBalance
 }
 
 
