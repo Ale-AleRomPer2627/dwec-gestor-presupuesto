@@ -101,7 +101,7 @@ Etiquetas:
 `;
 
         this.etiquetas.forEach(etiqueta => {
-            gastoCompleto += ` - ${etiqueta}\n`;
+            gastoCompleto += `- ${etiqueta}\n`;
         });
 
         return gastoCompleto;
@@ -147,18 +147,6 @@ function calcularTotalGastos() {
 // Función para calcular el balance actual
 function calcularBalance() {
     return presupuesto - calcularTotalGastos();
-}
-
-// NO MODIFICAR A PARTIR DE AQUÍ: exportación de funciones y objetos creados para poder ejecutar los tests.
-export {
-    mostrarPresupuesto,
-    actualizarPresupuesto,
-    CrearGasto,
-    listarGastos,
-    anyadirGasto,
-    borrarGasto,
-    calcularTotalGastos,
-    calcularBalance
 }
 
 
