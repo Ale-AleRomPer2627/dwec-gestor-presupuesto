@@ -107,9 +107,32 @@ Etiquetas:
         return gastoCompleto;
     };
 
-    // Añadir las etiquetas recibidas al crear el gasto
+    // Obtener el periodo de agrupación según el criterio indicado
+    this.obtenerPeriodoAgrupacion = function (periodo) {
+
+        const fechaGasto = new Date(this.fecha);
+
+        const anyo = fechaGasto.getFullYear();
+        const mes = String(fechaGasto.getMonth() + 1).padStart(2, "0"); // Sumamos 1 al mes porque getMonth() comienza en 0
+        const dia = String(fechaGasto.getDate()).padStart(2, "0"); // Usamos padStart para asegurarnos de que tenga dos dígitos
+
+        if (periodo === "anyo") {
+            return `${anyo}`;
+        }
+
+        if (periodo === "mes") {
+            return `${anyo}-${mes}`;
+        }
+
+        if (periodo === "dia") {
+            return `${anyo}-${mes}-${dia}`;
+        }
+    };
+
     this.anyadirEtiquetas(...etiquetas);
 }
+
+
 
 // Función para listar todos los gastos
 function listarGastos() {
@@ -149,6 +172,96 @@ function calcularBalance() {
     return presupuesto - calcularTotalGastos();
 }
 
+// Función para filtrar los gastos según un
+function filtrarGastos(filtro) {
+
+    return gastos.filter(gasto => {
+
+        // Filtrar por descripción
+        if (filtro.descripcionContiene &&
+            !gasto.descripcion.toLowerCase().includes(
+                filtro.descripcionContiene.toLowerCase()
+            )) {
+            return false;
+        }
+
+        // Filtrar por etiquetas
+        if (filtro.etiquetasTiene &&
+            filtro.etiquetasTiene.length > 0) {
+
+            if (!filtro.etiquetasTiene.some(etiqueta =>
+                gasto.etiquetas.includes(etiqueta))) {
+                return false;
+            }
+        }
+
+        // Filtrar por valor mínimo
+        if (filtro.valorMinimo !== undefined &&
+            gasto.valor < filtro.valorMinimo) {
+            return false;
+        }
+        
+        if (filtro.valorMaximo !== undefined &&
+            gasto.valor > filtro.valorMaximo) {
+            return false;
+        }
+
+        // Filtrar por fecha inicial
+        if (filtro.fechaDesde) {
+            const fechaDesde = new Date(filtro.fechaDesde);
+            fechaDesde.setHours(0, 0, 0, 0);
+
+            if (gasto.fecha < fechaDesde.getTime()) {
+                return false;
+            }
+        }
+
+        // Filtrar por fecha final
+        if (filtro.fechaHasta) {
+            const fechaHasta = new Date(filtro.fechaHasta);
+            fechaHasta.setHours(23, 59, 59, 999);
+
+            if (gasto.fecha > fechaHasta.getTime()) {
+                return false;
+            }
+        }
+
+        return true;
+    });
+}
+
+
+
+function agruparGastos(
+    periodo = "mes",
+    etiquetas = [],
+    fechaDesde,
+    fechaHasta = new Date().toISOString().slice(0, 10)
+) {
+    // Primero filtramos los gastos
+    const gastosFiltrados = filtrarGastos({
+        etiquetasTiene: etiquetas,
+        fechaDesde: fechaDesde,
+        fechaHasta: fechaHasta
+    });
+
+    // Después agrupamos los gastos filtrados
+    return gastosFiltrados.reduce((acumulador, gasto) => {
+
+        const clavePeriodo = gasto.obtenerPeriodoAgrupacion(periodo);
+
+        if (acumulador[clavePeriodo] === undefined) {
+            acumulador[clavePeriodo] = 0;
+        }
+
+        acumulador[clavePeriodo] += gasto.valor;
+
+        return acumulador;
+
+    }, {});
+}
+
+
 
 // NO MODIFICAR A PARTIR DE AQUÍ: exportación de funciones y objetos creados para poder ejecutar los tests.
 // Las funciones y objetos deben tener los nombres que se indican en el enunciado
@@ -161,5 +274,7 @@ export {
     anyadirGasto,
     borrarGasto,
     calcularTotalGastos,
-    calcularBalance
+    calcularBalance,
+    filtrarGastos,
+    agruparGastos
 }
